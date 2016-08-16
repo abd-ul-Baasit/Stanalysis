@@ -106,7 +106,7 @@ public class Graph extends JFrame
 	    movingAverageArray = MovingAverage.movingAverage(price, windowSize);
 	    
 
-	  //To Accompany the Moving Average Graph till the end of Regular Graph ( otherwise it would be plotted only along the center of regular graph)	    
+	  //To Accompany the Moving Average Graph till the end of Regular Graph ( otherwise it would be only plotted along the center of regular graph)	    
 	    double[] aheadMovingAverage = new double[price.length];
 	    
 	    for(int i = windowSize; i < (price.length - windowSize); i++)
@@ -127,6 +127,8 @@ public class Graph extends JFrame
       	
       for(int i = windowSize; i < indexNumber; i++){
     	  movingAverage.add(indexNumberArray[i], aheadMovingAverage[i]);
+    	  if(aheadMovingAverage[i + 1] == 0){
+    		  break;}
       }
       
       
