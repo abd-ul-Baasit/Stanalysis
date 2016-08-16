@@ -1,171 +1,227 @@
-import java.awt.BasicStroke;
-import java.awt.Color;
-
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
-
-import org.jfree.chart.ChartFactory;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 
-@SuppressWarnings("serial")
-public class Graph extends JFrame 
-{  
+import net.miginfocom.swing.MigLayout;
+
+public class GUI {
+
+	Graph chart = new Graph();							//Graph Object Created
+	DataFromDB Data = new DataFromDB();					//Database Object Created
 	
-   // DataSet Method 
-   private static XYDataset createDataset(String stockName, int dayLimit, int monthLimit, int yearLimit, int windowSize)
-   {
-	   
-	   DataFromDB DataSet = new DataFromDB();					//DB Object Created
-	   						
-	    int indexValue = 10000;
-	    
-	    String callDate = "getX";
-	    String[] indexCountDate = DataSet.DB(callDate, stockName, indexValue);
-	    
-	    int counterRow = 0;
-	    for (int i = 0; i < indexCountDate.length; i++){
-	        if (indexCountDate[i] != null)
-	            counterRow ++;
-	    }
-	    
-	    String[] x_cordinates = DataSet.DB(callDate, stockName, counterRow);
-	    
-	    int[] days = new int[x_cordinates.length];
-	    int[] months = new int[x_cordinates.length];
-	    int[] years = new int[x_cordinates.length];
-	   
-	    for(int i = 0; i < x_cordinates.length; i++){
+    JComboBox<String> Symbols; 
+    JComboBox<String> Dates;
+    String StockSelected = "AABS";						//By Default, the first StockName in the List is set
+    
+    int yearLimit = 2;						//Default Date is set for the First(Default) Value on the Drop-Down Menu Dates					
+    int monthLimit = 6;
+    int dayLimit = 4;
+    
+    int windowSize = 1;						//Default Window Size set to 1
+    
+    
+    //Basic GUI Method
+    public void BasicGUI() {					
 
-	    	days[i] = Character.getNumericValue(x_cordinates[i].charAt(0))*10 + Character.getNumericValue(x_cordinates[i].charAt(1));
-	    	
-	    	months[i] = Character.getNumericValue(x_cordinates[i].charAt(3))*10 + Character.getNumericValue(x_cordinates[i].charAt(4));
-	    	
-	    	years[i] = Character.getNumericValue(x_cordinates[i].charAt(6))*10 + Character.getNumericValue(x_cordinates[i].charAt(7)); 
-	    	
-	    }
-	    
-	    
-	    //GET THE STOCK PRICE VALUES
-
-	    String callPrice = "getY";						//DB Query Selection Method
-	    
-	    String[] y_cordinates = DataSet.DB(callPrice, stockName, counterRow);						//Stock Prices are stored
+    JFrame frame = new JFrame("Stanalysis Chart");
+    JPanel panel = new JPanel(new MigLayout());
+      
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setSize( 1200 , 600 );
+    frame.setLocation( 50 , 50 );
+    frame.add(panel);
+    
+    //Separate Panels are made for each Couple of Components
+      JLabel generalGraph = new JLabel("SELCTION PANEL");
+      panel.add(generalGraph, "wrap");
+    
+	  JPanel NamePanel = new JPanel(new FlowLayout());
+	  panel.add(NamePanel, "wrap");
 	  
+	  JPanel DatePanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 11, 0));
+	  panel.add(DatePanel, "wrap");
+	  
+	  JPanel WindowPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 8, 9));
+	  panel.add(WindowPanel, "wrap");
+	  
+	  JPanel ButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 25, 0));
+	  panel.add(ButtonPanel, "wrap");
+    
 //----------------------------------------------------------------------------
-	    
-	    double[] price = new double[y_cordinates.length];					
-	    
-	    for(int i = 0; i < y_cordinates.length; i++){						//Array is converted into Double for drawing Chart
-	    	price[i] = Double.parseDouble(y_cordinates[i]);
-	    }
 
-//----------------------------------------------------------------------------
-	    
-	    //LIMITING FUNCTIONS FOR DATE
-	    
-	    int yearCounter = 0;					
-	    for(int i = 0; i < years.length; i++){
-	    	if(years[i] == yearLimit)
-	    		break;
-	    	else
-	    		yearCounter++;
-	    }
-	    	
-	    int monthCounter = 0;
-	    for(int i = yearCounter; i < months.length; i++){
-	    	if(months[i] == monthLimit)
-	    		break;
-	    	else
-	    		monthCounter++;
-	    }	
-	    
-	    int dayCounter = 0;
-	    for(int i = (yearCounter + monthCounter); i < days.length; i++){
-	    	if( days[i] == dayLimit)
-	    		break;
-	    	else
-	    		dayCounter++;	    		
-	    }
 
-//-----------------------------------------------------------------------------
-	    
-	    int indexNumber = x_cordinates.length - (yearCounter + monthCounter + dayCounter);					//Row of Selected Date in the Database is calculated
-	    
-	    double[] indexNumberArray = new double[y_cordinates.length];
-	    	for(int i = 0; i < indexNumber; i++)							//Number of Days to be plotted at X-Axis
-	    		indexNumberArray[i] = i;
+    //Drop-Down Menu for Stocks' Names
+    JLabel labelName = new JLabel("Stock Name");
+    
+    String callName = "name";
+    String formality = null;
+    
+    String[] StockName = Data.DB(callName, formality, IndexCounter(StockSelected, callName));
 
-	    
-	    double[] movingAverageArray = new double[(price.length - windowSize) + 1];
-	    movingAverageArray = MovingAverage.movingAverage(price, windowSize);
-	    
+    for(int i = 0; i < StockName.length; i++)
+    	StockName[i] = StockName[i].toUpperCase();
 
-	  //To Accompany the Moving Average Graph till the end of Regular Graph ( otherwise it would be only plotted along the center of regular graph)	    
-	    double[] aheadMovingAverage = new double[price.length];
-	    
-	    for(int i = windowSize; i < (price.length - windowSize); i++)
-	    	aheadMovingAverage[i] = movingAverageArray[i - windowSize];
-	    
-//-------------------------------------------------------------------------------------	    
-	    
+    Symbols = new JComboBox<String>(StockName);
+    Symbols.setVisible(true);
+    
+//-------------------------------------------------------------------------------------------    
 
-	  //Regular Graph Plot  
-      final XYSeries regular = new XYSeries( "Regular" );          
- 
-      for(int i = 1; i < indexNumber; i++){
-      	  regular.add(indexNumberArray[i] , price[i]);  
+    //Item Listener added in Symbols
+    Symbols.addItemListener(
+    		new ItemListener(){
+		    	public void itemStateChanged(ItemEvent e){
+		    		if(e.getStateChange() == ItemEvent.SELECTED)
+		    			StockSelected =  (String) Symbols.getSelectedItem();		//Universal Variable "StockSelected" is updated
+					  
+
+				  	//DATES' Drop-Down Menu is updated ( The First one is created lower in the code )
+		    		Dates.setVisible(false);
+		    		
+				  	String callDate = "date";
+
+				    String[] allDates = Data.DB(callDate, StockSelected, IndexCounter(StockSelected, callDate));		//This call is made to set the Drop-Down Size
+				    Dates = new JComboBox<String>(allDates);
+				    DatePanel.add(Dates);
+
+				    //Date is converted from String to Integer and Divided respectively
+		    		dayLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(0))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(1));
+		    		monthLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(3))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(4));
+		    		yearLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(6))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(7));
+
+//-------------------------------------------------------------------------------------------    
+
+		    		//Item Listener added in Dates
+		    	    Dates.addItemListener( new ItemListener(){
+		    	    	public void itemStateChanged( ItemEvent e ){
+		    	    		
+		    	    		dayLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(0))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(1));
+		    	    		monthLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(3))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(4));
+		    	    		yearLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(6))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(7));		    	    		
+		    	    	}
+		    	    });
+
+//------------------------------------------------------------------------------------------- //ItemListener of Dates is finished   
+		    	  }
+		    	});
+    
+ //-------------------------------------------------------------------------------------------//ItemListener of Symbols is finished 
+
+
+    //First Appearance of DATES Drop-Down Menu
+    JLabel labelDate = new JLabel("Date From");
+    labelDate.setVisible(true);
+    
+    
+    String callMethod = "date";
+    String[] allDates = Data.DB(callMethod, StockSelected, IndexCounter(StockSelected, callMethod));
+    Dates = new JComboBox<String>(allDates);
+    Dates.setVisible(true);
+    
+//-------------------------------------------------------------------------------------------    
+
+    //Item Listener for First Appearance of DATES Drop-Down Menu is added
+    Dates.addItemListener( new ItemListener(){
+    	public void itemStateChanged( ItemEvent e ){
+    		
+    		dayLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(0))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(1));
+    		monthLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(3))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(4));
+    		yearLimit = Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(6))*10 + Character.getNumericValue(((String) Dates.getSelectedItem()).charAt(7));
     	}
+    });
+    
+//-------------------------------------------------------------------------------------------    
 
-      //Moving Graph Average Plot
-      final XYSeries movingAverage = new XYSeries( "Moving Average" );          
-      	
-      for(int i = windowSize; i < indexNumber; i++){
-    	  movingAverage.add(indexNumberArray[i], aheadMovingAverage[i]);
-    	  if(aheadMovingAverage[i + 1] == 0){
-    		  break;}
-      }
-      
-      
-      //Information of both Graphs is added to the JFreeChart method "dataset" 
-      final XYSeriesCollection dataset = new XYSeriesCollection( );          
-      dataset.addSeries( regular );          
-      dataset.addSeries( movingAverage );          
+    
+    //MOVING AVERAGE INPUT COMPONENTS ARE CREATED
+    
+		  JLabel MALabel = new JLabel("Window Size");
+		  MALabel.setVisible(true);
+		  
+//	  NumberFormat format = NumberFormat.getInstance();
+//	  NumberFormatter formatter = new NumberFormatter(format);
+//	  formatter.setValueClass(Integer.class);
+//	  formatter.setMinimum(0);
+//	  formatter.setMaximum(2);
+	  JFormattedTextField MAWindow = new JFormattedTextField();
+	  MAWindow.setColumns(5);
+	  
+	  MAWindow.setVisible(true);    
 
-      return dataset;
-   }
 
-//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------    
+	  
+	final ChartPanel chartPanel = new ChartPanel(null);
+	  
+	//"GENERATE" BUTTON IS CREATED
+	  JButton Select = new JButton("GENERATE");
+	  
+	  Select.addActionListener(new ActionListener(){	  
+		  public void actionPerformed(ActionEvent e){
+			  
+			  try {
+				    windowSize = Integer.parseInt(MAWindow.getText());
+				}
+				catch(NumberFormatException ex)
+				{
+					JOptionPane.showMessageDialog(frame, "Kindly Enter a Number for the Moving Average Window");
+				}
+
+			  chartPanel.setChart(new Graph().runGraph(StockSelected, "DAYS (From Selected Date to Last Available Date)", "PRICE", StockSelected, dayLimit, monthLimit, yearLimit, windowSize));
+			    panel.add(chartPanel);    
+
+		  }
+	  }  
+			  );
+	  
+//-------------------------------------------------------------------------------------------    
+	  
+	  // ALL THE COMPONENTS ARE ADDED AT ONE PLACE TO MAINTAIN SEQUENCE
+	    NamePanel.add(labelName);
+	    NamePanel.add(Symbols);
+	    DatePanel.add(labelDate);
+	    DatePanel.add(Dates);
+	    WindowPanel.add(MALabel);
+	    WindowPanel.add(MAWindow);
+	    ButtonPanel.add(Select);
+
+	    panel.add(chartPanel);    
+
+//-------------------------------------------------------------------------------------------    
+
+ 
+    frame.pack();
+    frame.setVisible(true);
+
+	}
+    
+//-------------------------------------------------------------------------------------------    
    
-   // Run Graph method to create both Charts
-   public JFreeChart runGraph(String chartTitle, String xLabel, String yLabel, String stockName, int yearLimit, int monthLimit, int dayLimit, int windowSize) {
-	   
-	      JFreeChart xylineChart = ChartFactory.createXYLineChart(
-	    	         chartTitle ,
-	    	         xLabel ,
-	    	         yLabel ,
-	    	         createDataset(stockName, yearLimit, monthLimit, dayLimit, windowSize) ,
-	    	         PlotOrientation.VERTICAL ,
-	    	         true , true , false);
-	      
-	      ChartPanel chartPanel = new ChartPanel( xylineChart );
-	      chartPanel.setPreferredSize( new java.awt.Dimension( 200,200 ) );
-	      final XYPlot plot = xylineChart.getXYPlot( );
-	      XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer( );
-	      renderer.setSeriesPaint( 0 , Color.DARK_GRAY );
-	      renderer.setSeriesPaint( 1 , Color.RED );
+    //IndexCounter Method is used to get Row Count from SQL
+    
+    public int IndexCounter(String stockName, String callMethod){
+        
+	    int indexValue = 10000;
 
-	      renderer.setSeriesStroke( 0 , new BasicStroke( 1.0f ) );
-	      renderer.setSeriesStroke( 1 , new BasicStroke( 1.0f ) );
-	      renderer.setBaseShapesVisible(false);
-	      
-	      plot.setRenderer( renderer ); 
-	      
-	      return xylineChart;
-	  }
+	    String[] indexCount = Data.DB(callMethod, stockName, indexValue);
+	    
+	    int counter = 0;
+	    for (int i = 0; i < indexCount.length; i ++){
+	        if (indexCount[i] != null)
+	            counter ++;
+	    }
+	    return counter;
+    }
+    
+//-------------------------------------------------------------------------------------------    
+
 }
