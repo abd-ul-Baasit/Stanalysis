@@ -176,7 +176,11 @@ public class GUI {
 					JOptionPane.showMessageDialog(frame, "Kindly Enter a Number for the Moving Average Window");
 				}
 
-			  chartPanel.setChart(new Graph().runGraph(StockSelected, "DAYS (From Selected Date to Last Available Date)", "PRICE", StockSelected, dayLimit, monthLimit, yearLimit, windowSize));
+			  try {
+				chartPanel.setChart(new Graph().runGraph(StockSelected, "DAYS (From Selected Date to Last Available Date)", "PRICE", StockSelected, dayLimit, monthLimit, yearLimit, windowSize));
+			} catch (Exception e1) {
+				JOptionPane.showMessageDialog(frame, "The Selected Window Size is Greater that the Number of Dates Available");
+			}
 			    panel.add(chartPanel);    
 
 		  }
